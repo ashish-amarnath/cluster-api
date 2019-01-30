@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "status.go",
+        "util.go",
+    ],
+    importmap = "sigs.k8s.io/cluster-api/vendor/sigs.k8s.io/kind/pkg/log",
+    importpath = "sigs.k8s.io/kind/pkg/log",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/sirupsen/logrus:go_default_library",
+        "//vendor/golang.org/x/crypto/ssh/terminal:go_default_library",
+        "//vendor/sigs.k8s.io/kind/pkg/log/fidget:go_default_library",
+    ],
+)

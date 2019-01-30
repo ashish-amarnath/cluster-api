@@ -20,6 +20,7 @@ go_library(
         "//vendor/k8s.io/client-go/kubernetes:go_default_library",
         "//vendor/k8s.io/client-go/tools/clientcmd:go_default_library",
         "//vendor/k8s.io/klog:go_default_library",
+        "//vendor/sigs.k8s.io/kind/pkg/log:go_default_library",
     ],
 )
 

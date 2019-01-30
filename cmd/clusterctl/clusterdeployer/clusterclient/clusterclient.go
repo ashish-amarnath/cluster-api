@@ -17,6 +17,7 @@ limitations under the License.
 package clusterclient
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -34,6 +35,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	"sigs.k8s.io/cluster-api/pkg/client/clientset_generated/clientset"
 	"sigs.k8s.io/cluster-api/pkg/util"
+	kindlogutil "sigs.k8s.io/kind/pkg/log"
 )
 
 const (
@@ -45,6 +47,10 @@ const (
 	timeoutResourceReady        = 15 * time.Minute
 	timeoutMachineReady         = 30 * time.Minute
 	timeoutResourceDelete       = 15 * time.Minute
+)
+
+var (
+	status = kindlogutil.NewStatus(os.Stdout)
 )
 
 // Provides interaction with a cluster
@@ -426,7 +432,7 @@ func (c *client) WaitForClusterV1alpha1Ready() error {
 
 func (c *client) waitForClusterDelete(namespace string) error {
 	return util.PollImmediate(retryIntervalResourceDelete, timeoutResourceDelete, func() (bool, error) {
-		klog.V(2).Infof("Waiting for cluster objects to be deleted...")
+		status.Start(fmt.Sprintf("Waiting for cluster objects to be deleted..."))
 		response, err := c.clientSet.ClusterV1alpha1().Clusters(namespace).List(metav1.ListOptions{})
 		if err != nil {
 			return false, nil
@@ -440,7 +446,7 @@ func (c *client) waitForClusterDelete(namespace string) error {
 
 func (c *client) waitForMachineDeploymentsDelete(namespace string) error {
 	return util.PollImmediate(retryIntervalResourceDelete, timeoutResourceDelete, func() (bool, error) {
-		klog.V(2).Infof("Waiting for machine deployment objects to be deleted...")
+		status.Start(fmt.Sprintf("Waiting for machine deployment objects to be deleted..."))
 		response, err := c.clientSet.ClusterV1alpha1().MachineDeployments(namespace).List(metav1.ListOptions{})
 		if err != nil {
 			return false, nil
@@ -454,7 +460,7 @@ func (c *client) waitForMachineDeploymentsDelete(namespace string) error {
 
 func (c *client) waitForMachineSetsDelete(namespace string) error {
 	return util.PollImmediate(retryIntervalResourceDelete, timeoutResourceDelete, func() (bool, error) {
-		klog.V(2).Infof("Waiting for machine set objects to be deleted...")
+		status.Start(fmt.Sprintf("Waiting for machine set objects to be deleted..."))
 		response, err := c.clientSet.ClusterV1alpha1().MachineSets(namespace).List(metav1.ListOptions{})
 		if err != nil {
 			return false, nil
@@ -468,7 +474,7 @@ func (c *client) waitForMachineSetsDelete(namespace string) error {
 
 func (c *client) waitForMachinesDelete(namespace string) error {
 	return util.PollImmediate(retryIntervalResourceDelete, timeoutResourceDelete, func() (bool, error) {
-		klog.V(2).Infof("Waiting for machine objects to be deleted...")
+		status.Start(fmt.Sprintf("Waiting for machine objects to be deleted..."))
 		response, err := c.clientSet.ClusterV1alpha1().Machines(namespace).List(metav1.ListOptions{})
 		if err != nil {
 			return false, nil
@@ -517,7 +523,7 @@ func (c *client) buildKubectlArgs(commandName string) []string {
 
 func (c *client) waitForKubectlApply(manifest string) error {
 	err := util.PollImmediate(retryIntervalKubectlApply, timeoutKubectlApply, func() (bool, error) {
-		klog.V(2).Infof("Waiting for kubectl apply...")
+		status.Start(fmt.Sprintf("Waiting for kubectl apply...☸"))
 		err := c.kubectlApply(manifest)
 		if err != nil {
 			if strings.Contains(err.Error(), "refused") {
@@ -546,7 +552,7 @@ func (c *client) waitForKubectlApply(manifest string) error {
 func waitForClusterResourceReady(cs clientset.Interface) error {
 	deadline := time.Now().Add(timeoutResourceReady)
 	err := util.PollImmediate(retryIntervalResourceReady, timeoutResourceReady, func() (bool, error) {
-		klog.V(2).Info("Waiting for Cluster v1alpha resources to become available...")
+		status.Start(fmt.Sprintf("Waiting for Cluster v1alpha resources to become available...㊮"))
 		_, err := cs.Discovery().ServerResourcesForGroupVersion("cluster.k8s.io/v1alpha1")
 		if err == nil {
 			return true, nil
@@ -559,7 +565,7 @@ func waitForClusterResourceReady(cs clientset.Interface) error {
 	}
 	timeout := time.Until(deadline)
 	return util.PollImmediate(retryIntervalResourceReady, timeout, func() (bool, error) {
-		klog.V(2).Info("Waiting for Cluster v1alpha resources to be listable...")
+		status.Start(fmt.Sprintf("Waiting for Cluster v1alpha resources to be listable...📝"))
 		_, err := cs.ClusterV1alpha1().Clusters(apiv1.NamespaceDefault).List(metav1.ListOptions{})
 		if err == nil {
 			return true, nil
@@ -570,7 +576,7 @@ func waitForClusterResourceReady(cs clientset.Interface) error {
 
 func waitForMachineReady(cs clientset.Interface, machine *clusterv1.Machine) error {
 	err := util.PollImmediate(retryIntervalResourceReady, timeoutMachineReady, func() (bool, error) {
-		klog.V(2).Infof("Waiting for Machine %v to become ready...", machine.Name)
+		status.Start(fmt.Sprintf("Waiting for Machine %v to become ready...🖥", machine.Name))
 		m, err := cs.ClusterV1alpha1().Machines(machine.Namespace).Get(machine.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, nil

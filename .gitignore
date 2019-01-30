@@ -35,3 +35,5 @@ docs/book/node_modules/
 
 # Common editor / temporary files
 *~
+# vscode
+.vscode
